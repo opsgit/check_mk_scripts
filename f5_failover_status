@@ -1,0 +1,34 @@
+#!/usr/bin/python
+
+# Check failover status of f5
+
+# Author: Ruud Vander velpen
+
+f5_status_default_levels = (2,0)
+
+def check_f5_failover_status(item, params, info):
+    status = info[0][0]
+    status = int(status)
+    warn, crit = params
+    perfdata = [ ( "status", status, "", "", "", "") ]
+    if status == crit:
+        return (2, "CRIT - Status = Unknown", perfdata)
+    elif status <= warn:
+        if status == 1:
+            return (1, "WARN - Status = Offline", perfdata)
+        elif status == 2:
+            return (1, "WARN - Status = Forced Offline", perfdata)
+    else:
+        if status == 3:
+            return (0, "OK - Status = Standby", perfdata)
+        elif status == 4:
+            return (0, "OK - Status = Active", perfdata)
+
+check_info["f5_failover_status"] = {
+    "check_function"        : check_f5_failover_status,
+    "inventory_function"    : lambda info: [(None, "f5_status_default_levels")],
+    "service_description"   : "Failover Status",
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : lambda oid: "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+    "snmp_info"             : ( ".1.3.6.1.4.1.3375.2.1.14.3", [ "1" ]),
+}
