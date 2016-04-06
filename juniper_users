@@ -1,0 +1,38 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+
+##Script used by check_mk to monitor the users for sa.
+
+#OIDs used:
+#ASYNCOS-MAIL-MIB::workQueueMessages    .1.3.6.1.4.1.15497.1.1.1.11.0
+#SNMPv2-MIB::sysOID                     .1.3.6.1.2.1.1.2.0
+
+#scan function check for ironport sepcific OID (.1.3.6.1.2.1.1.2.0)
+
+#Author: Ruud Vander Velpen
+
+users_default_levels = (320, 350)
+
+def check_juniper_users(item, params, info):
+        #unpack check parameter
+	musers = 350
+        warn, crit = params
+        users = info[0][0]
+        users = int(users)
+        userstext = "users: %s/%s" % (users, musers)
+        perfdata = [ ( "users", users, warn, crit, "", musers ) ]
+        if users >= crit:
+                return (2, "CRIT - " + userstext, perfdata)
+        elif users >= warn:
+                return (1, "WARN - " + userstext, perfdata)
+        else:
+                return (0, "OK - " + userstext, perfdata)
+
+check_info["juniper_users"] = {
+        'check_function'        : check_juniper_users,
+        'inventory_function'    : lambda info: [(None, "users_default_levels")],
+        'service_description'   : "Users",
+        'has_perfdata'          : True,
+        'snmp_scan_function'    : lambda oid: "SA-4500" in oid(".1.3.6.1.4.1.12532.6.0"),
+        'snmp_info'             : ( ".1.3.6.1.4.1.12532.12", [ "0" ] ),
+}

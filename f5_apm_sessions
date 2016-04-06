@@ -1,0 +1,29 @@
+#!/usr/bin/python
+
+# Scan function looks for 'big-ip' in productname
+
+# Author: Ruud Vander velpen
+
+f5_apm_sessions_default_levels = (6500,10000)
+
+def check_f5_apm_sessions(item, params, info):
+    sessions = info[0][0]
+    sessions = int(sessions)
+    warn, crit = params
+    msessions = 60000
+    perfdata = [ ( "ses", sessions, warn, crit, "", msessions) ]
+    if sessions >= crit:
+        return (2, "CRIT - APM sessions above (%s): %s/%s" % (crit,sessions,msessions), perfdata)
+    elif sessions >= warn:
+        return (1, "WARN - APM sessions above (%s): %s/%s" % (warn,sessions,msessions), perfdata)
+    else:
+        return (0, "OK - APM sessions: %s/%s" % (sessions,msessions), perfdata)
+
+check_info["f5_apm_sessions"] = {
+    "check_function"        : check_f5_apm_sessions,
+    "inventory_function"    : lambda info: [(None, "f5_apm_sessions_default_levels")],
+    "service_description"   : "APM Sessions",
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : lambda oid: "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+    "snmp_info"             : ( ".1.3.6.1.4.1.3375.2.6.1.4.3", [ "0" ]),
+}

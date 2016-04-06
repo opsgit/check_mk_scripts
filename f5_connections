@@ -1,0 +1,29 @@
+#!/usr/bin/python
+
+# Scan function looks for 'big-ip' in productname
+
+# Author: Ruud Vander velpen
+
+f5_connections_default_levels = (1500000,2000000)
+
+def check_f5_connections(item, params, info):
+    conn = info[0][0]
+    conn = int(conn)
+    warn, crit = params
+    mconn = 3000000
+    perfdata = [ ( "conn", conn, warn, crit, "", mconn) ]
+    if conn >= crit:
+        return (2, "CRIT - Connections above (%s): %s/%s" % (crit,conn,mconn), perfdata)
+    elif conn >= warn:
+        return (1, "WARN - Connections above (%s): %s/%s" % (warn,conn,mconn), perfdata)
+    else:
+        return (0, "OK - Connections: %s/%s" % (conn,mconn), perfdata)
+
+check_info["f5_connections"] = {
+    "check_function"        : check_f5_connections,
+    "inventory_function"    : lambda info: [(None, "f5_connections_default_levels")],
+    "service_description"   : "Connections",
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : lambda oid: "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+    "snmp_info"             : ( ".1.3.6.1.4.1.3375.2.1.1.2.21.16", [ "0" ]),
+}

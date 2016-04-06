@@ -1,0 +1,34 @@
+def inventory_paloalto_sessions(info):
+    if len(info[0]) >= 7:
+        return [ (None, None) ]
+
+def check_paloalto_sessions(checktype, params, info):
+	# Define Warning Level here for now...
+	warn = 80
+	# Define Critical Level here for now... 
+	crit = 90 
+	sessions_util = int(info[0][0])
+	sessions_max = int(info[0][1])
+	sessions_act = int(info[0][2])
+	sessions_tcp = int(info[0][3])
+	sessions_udp = int(info[0][4])
+	sessions_ssl = int(info[0][5])
+	sessions_sslutil = int(info[0][6])	
+        perfdata = [ ( "total sessions" , sessions_act ) , ( "tcp sessions" , sessions_tcp ) , ( "udp sessions" , sessions_udp ) , ( "ssl proxy sessions" , sessions_ssl ) ]
+	if sessions_util >= crit:
+		return (2, "Critical - %d total active sessions (%d TCP, %d UDP) - %d%% of %d maximum sessions used. Proxied SSL sessions: %d, Utilization of SSL Proxy: %d%% " % (sessions_act , sessions_tcp , sessions_udp , sessions_util , sessions_max , sessions_ssl , sessions_sslutil ), perfdata)
+	elif sessions_util >= warn:
+		return (1, "WARNING - %d total active sessions (%d TCP, %d UDP) - %d%% of %d maximum sessions used. Proxied SSL sessions: %d, Utilization of SSL Proxy: %d%% " % (sessions_act , sessions_tcp , sessions_udp , sessions_util , sessions_max , sessions_ssl , sessions_sslutil ), perfdata)
+	else:
+		return (0, "OK - %d total active sessions (%d TCP, %d UDP) - %d%% of %d maximum sessions used. Proxied SSL sessions: %d, Utilization of SSL Proxy: %d%% " % (sessions_act , sessions_tcp , sessions_udp , sessions_util , sessions_max , sessions_ssl , sessions_sslutil ), perfdata)             
+        return (3, "UNKNOWN - No data retrieved")
+
+
+check_info["paloalto_sessions"] = {
+    'check_function':          check_paloalto_sessions,
+    'inventory_function':      inventory_paloalto_sessions,
+    'service_description':     'Palo Alto Networks Sessions Counters',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.25461.2.1.2.3', [ '1.0', '2.0', '3.0', '4.0' , '5.0' , '6.0' , '7.0' , '8.0'] ),
+    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.25461."),
+}
